@@ -1,6 +1,6 @@
 // app/(tabs)/makes.tsx
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { CarsApi } from '../../src/data/api/CarsApi';
 import { Car, CarMake } from '../../src/domain/models/Car.model';
 import { GetCarMakesUseCase } from '../../src/domain/usecases/GetCarMakes.usecase';
@@ -54,6 +54,11 @@ const MakesScreen = () => {
         fetchDigimonsByLevel(levelName);
     };
 
+    const handleClearLevel = () => {
+        setSelectedLevel(null);
+        setDigimons([]);
+    };
+
     if (loading) {
         return <ActivityIndicator size="large" style={styles.center} />;
     }
@@ -66,7 +71,14 @@ const MakesScreen = () => {
         <View style={styles.container}>
             {/* SELECTOR DE NIVELES */}
             <View style={styles.levelsContainer}>
-                <Text style={styles.sectionTitle}>Selecciona un Nivel:</Text>
+                <View style={styles.headerRow}>
+                    <Text style={styles.sectionTitle}>Selecciona un Nivel:</Text>
+                    {selectedLevel && (
+                        <TouchableOpacity onPress={handleClearLevel} style={styles.clearButton}>
+                            <Text style={styles.clearButtonText}>✕ Limpiar</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
                 <FlatList
                     data={levels}
                     keyExtractor={(item) => item.id.toString()}
@@ -96,7 +108,7 @@ const MakesScreen = () => {
 
             {/* LISTADO DE DIGIMONS POR NIVEL */}
             {selectedLevel && (
-                <View style={styles.digimonListContainer}>
+                <ScrollView style={styles.digimonListContainer}>
                     <Text style={styles.sectionTitle}>
                         Digimons - Nivel {selectedLevel}
                     </Text>
@@ -110,16 +122,13 @@ const MakesScreen = () => {
                     )}
 
                     {!loadingDigimons && digimons.length > 0 && (
-                        <FlatList
-                            data={digimons}
-                            keyExtractor={(item) => item.id.toString()}
-                            renderItem={({ item }) => (
-                                <CarCard car={item} />
-                            )}
-                            scrollEnabled={false}
-                        />
+                        <View>
+                            {digimons.map((item) => (
+                                <CarCard key={item.id.toString()} car={item} />
+                            ))}
+                        </View>
                     )}
-                </View>
+                </ScrollView>
             )}
 
             {!selectedLevel && (
@@ -148,12 +157,31 @@ const styles = StyleSheet.create({
         borderBottomWidth: 2,
         borderBottomColor: '#eee',
     },
+    headerRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
     sectionTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        marginBottom: 10,
         paddingHorizontal: 10,
         color: '#333',
+        flex: 1,
+    },
+    clearButton: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#FF3B30',
+        backgroundColor: '#ffebee',
+    },
+    clearButtonText: {
+        fontSize: 14,
+        color: '#FF3B30',
+        fontWeight: '600',
     },
     levelButton: {
         marginHorizontal: 5,
