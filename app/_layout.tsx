@@ -1,24 +1,46 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+// app/_layout.tsx
+import { Stack, router } from 'expo-router';
+import { useEffect } from 'react';
+import { Text } from 'react-native';
+import { AuthProvider, useAuth } from '../src/presentation/hooks/useAuth';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+// Componente Wrapper para manejar la redirección
+const InitialLayout = () => {
+  const { user, loading } = useAuth();
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  useEffect(() => {
+    if (loading) return;
+
+    if (user) {
+      // Usuario autenticado, redirigir a las pestañas principales
+      router.replace('/(tabs)');
+    } else {
+      // Usuario NO autenticado, redirigir a la pantalla de login
+      router.replace('auth/login' as any);
+    }
+  }, [user, loading]);
+
+  if (loading) {
+    return <Text>Cargando...</Text>; // Puedes usar un SplashScreen aquí
+  }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <Stack>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="auth" options={{ headerShown: false }} />
+      <Stack.Screen name="car/[id]" options={{ title: 'Detalle del Digimon' }} />
+    </Stack>
   );
-}
+};
+
+// Proveedor de Contexto
+const RootLayout = () => {
+  return (
+    <AuthProvider>
+      <InitialLayout />
+    </AuthProvider>
+  );
+};
+
+export default RootLayout;
